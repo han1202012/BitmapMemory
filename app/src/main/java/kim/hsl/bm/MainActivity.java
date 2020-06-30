@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
+import kim.hsl.bm.utils.BitmapSizeReduce;
+
 public class MainActivity extends AppCompatActivity {
 
     static {
@@ -25,10 +27,32 @@ public class MainActivity extends AppCompatActivity {
         // 查看 Bitmap 内存占用情况
         //showBitmapMeory();
 
-
+        // 缩小图像尺寸
+        sizeReduce();
 
 
     }
+
+    /**
+     * 图像尺寸缩小
+     */
+    private void sizeReduce(){
+        // 从资源文件中加载内存
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.blog);
+        // 打印 Bitmap 对象的宽高, 字节大小
+        Log.i("Bitmap", "blog : " + bitmap.getWidth() + " , " +
+                bitmap.getHeight() + " , " +
+                bitmap.getByteCount());
+
+        // 从资源文件中加载内存
+        Bitmap reduceSizeBitmap = BitmapSizeReduce.getResizedBitmap(this, R.drawable.blog,
+                100, 100 , false , null);
+        // 打印 Bitmap 对象的宽高, 字节大小
+        Log.i("Bitmap", "reduceSizeBitmap : " + reduceSizeBitmap.getWidth() + " , " +
+                reduceSizeBitmap.getHeight() + " , " +
+                reduceSizeBitmap.getByteCount());
+    }
+
 
     /**
      * 分析 Bitmap 内存占用情况
