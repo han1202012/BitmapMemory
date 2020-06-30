@@ -114,9 +114,6 @@ public class BitmapSizeReduce {
         options.inMutable = true;
         options.inBitmap = inBitmap;
         return BitmapFactory.decodeResource(resources,iamgeResId,options);
-
-
-        return null;
     }
 
 }
