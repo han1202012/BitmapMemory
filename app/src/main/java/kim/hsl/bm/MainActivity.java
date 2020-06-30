@@ -22,6 +22,18 @@ public class MainActivity extends AppCompatActivity {
         TextView tv = findViewById(R.id.sample_text);
         tv.setText(stringFromJNI());
 
+        // 查看 Bitmap 内存占用情况
+        //showBitmapMeory();
+
+
+
+
+    }
+
+    /**
+     * 分析 Bitmap 内存占用情况
+     */
+    private void showBitmapMeory(){
         Log.i("Bitmap", "getResources().getDisplayMetrics().densityDpi : " +
                 getResources().getDisplayMetrics().densityDpi +
                 " , getResources().getDisplayMetrics().density : " +
@@ -31,8 +43,8 @@ public class MainActivity extends AppCompatActivity {
         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.blog);
         // 打印 Bitmap 对象的宽高, 字节大小
         Log.i("Bitmap", "blog : " + bitmap.getWidth() + " , " +
-                        bitmap.getHeight() + " , " +
-                        bitmap.getByteCount());
+                bitmap.getHeight() + " , " +
+                bitmap.getByteCount());
 
         bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.blog_h);
         // 打印 Bitmap 对象的宽高, 字节大小
@@ -64,7 +76,6 @@ public class MainActivity extends AppCompatActivity {
         Log.i("Bitmap", "blog_xxx : " + bitmap.getWidth() + " , " +
                 bitmap.getHeight() + " , " +
                 bitmap.getByteCount());
-
     }
 
     public native String stringFromJNI();
