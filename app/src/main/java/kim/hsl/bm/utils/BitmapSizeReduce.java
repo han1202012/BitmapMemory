@@ -14,6 +14,9 @@ public class BitmapSizeReduce {
 
     /**
      * 获取指定尺寸于鏊求的 Bitmap 对象
+     * 该方法有缺陷 , 计算值的时候没有考虑像素密度
+     * 如果从不同像素密度的资源文件中加载
+     * 可能计算出的值与指定的 maxBitmapWidth maxBitmapHeight 略有出入
      *
      * @param context           上下文对象
      * @param iamgeResId        要解析的图片资源 id
