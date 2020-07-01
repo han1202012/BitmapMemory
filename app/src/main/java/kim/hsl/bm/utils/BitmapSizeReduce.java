@@ -34,6 +34,8 @@ public class BitmapSizeReduce {
 
         // 用于解析资源
         Resources resources = context.getResources();
+        // 为图像指定解码的 像素密度
+        int decodeDensityDpi = resources.getDisplayMetrics().densityDpi;
         // Bitmap 图片加载选项
         BitmapFactory.Options options = new BitmapFactory.Options();
         // 图片宽度
@@ -57,6 +59,13 @@ public class BitmapSizeReduce {
          */
         options.inJustDecodeBounds = true;
 
+        // 设置图片的来源方向的像素密度 , 如设置
+        options.inDensity = decodeDensityDpi;
+        // 设置图片的目标方向的像素密度
+        options.inTargetDensity = decodeDensityDpi;
+        // 设置图片解码可缩放 , 该配置与上述两个配置结合使用
+        options.inScaled = true;
+
         /*
             由于设置了 inJustDecodeBounds = true , 该方法返回值为空 ;
             但是传入的 BitmapFactory.Options 对象中的 outXxx 字段都会被赋值 ;
@@ -69,6 +78,10 @@ public class BitmapSizeReduce {
         imageWidth = options.outWidth;
         // 获取 iamgeResId 图片资源对应的图片高度
         imageHeight = options.outHeight;
+        // 打印解码后的宽高值
+        Log.w(TAG, "getResizedBitmap options.outWidth=" + options.outWidth +
+                " , options.outHeight=" + options.outHeight);
+
 
 
         // 2. 计算图片缩小比例

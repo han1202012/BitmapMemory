@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
         //showBitmapMeory();
 
         // 缩小图像尺寸
-        //sizeReduce();
+        sizeReduce();
 
 
     }
