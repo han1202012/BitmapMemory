@@ -171,6 +171,9 @@ public class BitmapLruCacheMemoryReuse {
         };
     }
 
+    /**
+     * 初始化引用队列
+     */
     private void initBitmapReusePool(){
         // 创建一个线程安全的 HashSet , 其中的元素是 Bitmap 弱引用
         bitmapReusePool = Collections.synchronizedSet(new HashSet<WeakReference<Bitmap>>());
