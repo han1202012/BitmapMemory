@@ -31,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
         // 缩小图像尺寸
         //sizeReduce();
 
+        // 内存缓存
+        memoryCache();
 
     }
 
@@ -40,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void memoryCache(){
         // 初始化 LruCache 内存缓存
-        BitmapMemoryCache.getInstance().initLruCache(this);
+        BitmapMemoryCache.getInstance().init(this);
     }
 
 
