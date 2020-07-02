@@ -201,11 +201,13 @@ public class BitmapMemoryCache {
      * @return
      */
     public Bitmap getReuseBitmap(int width,int height,int inSampleSize){
+        // 3.0 之前的版本不启用 Bitmap 内存复用机制 , 返回 null 即可
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB){
             return null;
         }
         // 获取准备复用的 Bitmap , 之后设置到 Options 中
         Bitmap inBitmap = null;
+        // 使用迭代器遍历该 Set 集合 , 如果遍历中涉及到删除 , 就要使用迭代器遍历
         Iterator<WeakReference<Bitmap>> iterator = bitmapReusePool.iterator();
         //迭代查找符合复用条件的Bitmap
         while (iterator.hasNext()){
