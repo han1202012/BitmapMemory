@@ -3,9 +3,14 @@ package kim.hsl.bm.utils;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.util.LruCache;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
@@ -13,6 +18,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
+import kim.hsl.bm.BuildConfig;
+import kim.hsl.bm.diskcache.DiskLruCache;
 
 /**
  * Bitmap 内存缓存
@@ -32,6 +40,11 @@ public class BitmapDiskLruCacheMemoryReuse {
      * 缓存图片的 LruCache
      */
     private LruCache<String, Bitmap> mLruCache;
+
+    /**
+     * 磁盘缓存
+     */
+    private DiskLruCache mDiskLruCache;
 
     /**
      * Bitmap 复用池
@@ -91,12 +104,15 @@ public class BitmapDiskLruCacheMemoryReuse {
      * 使用时初始化
      * @param context
      */
-    public void init(Context context){
+    public void init(Context context, String diskDirectory){
         // 初始化内存缓存
         initLruCache(context);
 
         // 初始化弱引用队列
         initBitmapReusePool();
+
+        // 初始化磁盘缓存
+        initDiskLruCache(diskDirectory);
     }
 
     /**
@@ -201,6 +217,31 @@ public class BitmapDiskLruCacheMemoryReuse {
         };
         // 启动引用队列监控线程
         referenceQueueMonitorThread.start();
+    }
+
+
+    /**
+     * 初始化磁盘缓存
+     * @param diskDirectory
+     */
+    private void initDiskLruCache(String diskDirectory){
+        try {
+            /*
+                初始化内存缓存
+                需要传入内存缓存目录文件
+                APP 版本
+                缓存值的个数
+                缓存大小 , 单位字节 , 这个最重要
+             */
+            mDiskLruCache = DiskLruCache.open(
+                    new File(diskDirectory),
+                    BuildConfig.VERSION_CODE,
+                    1,
+                    8 * 1024 * 10024
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -333,5 +374,107 @@ public class BitmapDiskLruCacheMemoryReuse {
     public void clearLruCache(){
         mLruCache.evictAll();
     }
+
+
+    /*
+        下面的 2 个方法是提供给用户用于操作 磁盘 的接口
+     */
+
+    /**
+     * 将键值对放入 磁盘缓存 中
+     * @param key
+     * @param bitmap
+     */
+    public void putBitmapToDisk(String key, Bitmap bitmap){
+        DiskLruCache.Snapshot snapshot = null;
+        OutputStream outputStream = null;
+        try {
+            snapshot = mDiskLruCache.get(key);
+            // 如果缓存中有对应 key 键值的文件 , 不进行任何处理
+            if(snapshot != null) {
+                // 该用法与 SharedPreference 用法类似
+                DiskLruCache.Editor editor = mDiskLruCache.edit(key);
+                if(editor != null){
+                    // 这里的 0 表示获取该 key 对应的第 0 个文件
+                    // 每个 可以 可以对应多个文件 , 这个值是创建 DiskLruCache 时传入的 valueCount 参数
+                    outputStream = editor.newOutputStream(0);
+                    // 写出 Bitmap 对象到文件中
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 0, outputStream);
+
+                    // 该用法与 SharedPreference 用法类似
+                    editor.commit();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            if(snapshot != null) {
+                snapshot.close();
+            }
+            if(outputStream != null){
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
+     * 将键值对放入 磁盘缓存 中
+     * @param key       键值
+     * @param inBitmap 复用 Bitmap 内存
+     * @return
+     */
+    public Bitmap getBitmapFromDisk(String key, Bitmap inBitmap){
+        Bitmap bitmap = null;
+        DiskLruCache.Snapshot snapshot = null;
+        InputStream inputStream = null;
+        try {
+            snapshot = mDiskLruCache.get(key);
+            // 如果缓存中有对应 key 键值的文件 , 不进行任何处理
+            if(snapshot != null) {
+                // 该用法与 SharedPreference 用法类似
+                DiskLruCache.Editor editor = mDiskLruCache.edit(key);
+                if(editor != null){
+                    // 这里的 0 表示获取该 key 对应的第 0 个文件
+                    // 每个 可以 可以对应多个文件 , 这个值是创建 DiskLruCache 时传入的 valueCount 参数
+                    inputStream = editor.newInputStream(0);
+
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inMutable = true;
+                    options.inBitmap = inBitmap;
+
+                    // 写出 Bitmap 对象到文件中
+                    bitmap = BitmapFactory.decodeStream(inputStream, null, options);
+
+                    if(bitmap != null){
+                        // 从磁盘读取后 , 先缓存到内存中
+                        mLruCache.put(key, bitmap);
+                    }
+
+                    // 该用法与 SharedPreference 用法类似
+                    editor.commit();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            if(snapshot != null) {
+                snapshot.close();
+            }
+            if(inputStream != null){
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return bitmap;
+    }
+
+
 
 }
