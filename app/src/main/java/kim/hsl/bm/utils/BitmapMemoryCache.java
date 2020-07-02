@@ -195,6 +195,22 @@ public class BitmapMemoryCache {
 
     /**
      * 获取一个可以被复用的 Bitmap 对象
+     *
+     * 与 BitmapFactory 配合使用 :
+     *
+     * Android 4.4 以后的 Bitmap 复用情况 :
+     * 在 KITKAT ( Android 4.4 , 19 平台 ) 以后的代码中 ,
+     * 只要被解码生成的 Bitmap 对象的字节大小 ( 缩放后的 )
+     * 小于等于 inBitmap 的字节大小 , 就可以复用成功 ;
+     *
+     * Android 4.4 之前的 Bitmap 复用情况 : ( 比较苛刻 )
+     * 在 KITKAT 之前的代码中 , 被解码的图像必须是
+     *  - JPEG 或 PNG 格式 ,
+     *  - 并且 图像大小必须是相等的 ,
+     *  - inssampleSize 设置为 1 ,
+     * 才能复用成功 ;
+     * 另外被复用的图像的 像素格式 Config ( 如 RGB_565 ) 会覆盖设置的 inPreferredConfig 参数
+     *
      * @param width
      * @param height
      * @param inSampleSize
