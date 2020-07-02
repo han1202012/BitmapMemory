@@ -41,8 +41,51 @@ public class MainActivity extends AppCompatActivity {
      * 图像缓存
      */
     private void memoryCache(){
-        // 初始化 LruCache 内存缓存
+        // 初始化 LruCache 内存缓存 , 与引用队列 , 一般在 onCreate 方法中初始化
+        // 这里为了演示 , 放在方法的开头位置
         BitmapLruCacheMemoryReuse.getInstance().init(this);
+
+        // 第一次从 LruCache 内存中获取 Bitmap 数据
+        Bitmap bitmap = BitmapLruCacheMemoryReuse.getInstance().
+                getBitmapFromLruCache(R.drawable.blog + "");
+
+
+        /*
+            如果从内存中获取 Bitmap 对象失败 , 这里就需要创建该图片 , 并放入 LruCache 内存中
+         */
+        if(bitmap == null){
+            // 要复用内存的 Bitmap 对象 , 将新的 Bitmap 写入到该 Bitmap 内存中
+            Bitmap inBitmap = null;
+            // 尝试获取复用对象
+            BitmapLruCacheMemoryReuse.getInstance().
+                    getReuseBitmap(200, 200, 1);
+            // 加载指定大小格式的图像
+            bitmap = BitmapSizeReduce.getResizedBitmap(this, R.drawable.blog,
+                    200, 200, false, inBitmap);
+
+            // 将新的 bitap 放入 LruCache 内存缓存中
+            BitmapLruCacheMemoryReuse.getInstance().
+                    putBitmapToLruCache(R.drawable.blog + "", bitmap);
+
+            Log.i("Bitmap 没有获取到创建新的", "blog : " + bitmap.getWidth() + " , " +
+                    bitmap.getHeight() + " , " +
+                    bitmap.getByteCount());
+
+        }else{
+            Log.i("Bitmap 内存中获取数据", "blog : " + bitmap.getWidth() + " , " +
+                    bitmap.getHeight() + " , " +
+                    bitmap.getByteCount());
+        }
+
+
+
+        // 第一次从 LruCache 内存中获取 Bitmap 数据
+        Bitmap bitmap2 = BitmapLruCacheMemoryReuse.getInstance().
+                getBitmapFromLruCache(R.drawable.blog + "");
+
+        Log.i("Bitmap 第二次内存中获取数据", "blog : " + bitmap2.getWidth() + " , " +
+                bitmap2.getHeight() + " , " +
+                bitmap2.getByteCount());
     }
 
 

@@ -129,6 +129,11 @@ public class BitmapLruCacheMemoryReuse {
              */
             @Override
             protected int sizeOf(String key, Bitmap value) {
+                // 如果使用的是复用的 Bitmap 对象 , 其占用内存大小是之前的图像分配的内存大小
+                // 大于等于当前图像的内存占用大小
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    return value.getAllocationByteCount();
+                }
                 return value.getByteCount();
             }
 
@@ -219,8 +224,9 @@ public class BitmapLruCacheMemoryReuse {
      * @return
      */
     public Bitmap getReuseBitmap(int width,int height,int inSampleSize){
-        // 3.0 之前的版本不启用 Bitmap 内存复用机制 , 返回 null 即可
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB){
+        // Android 2.3.3（API 级别 10）及以下的版本中 , 使用 Bitmap 对象的 recycle 方法回收内存
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.GINGERBREAD_MR1){
+            // 如果 API 级别小于等于 10 , 不启用 Bitmap 内存复用机制 , 返回 null 即可
             return null;
         }
         // 获取准备复用的 Bitmap , 之后设置到 Options 中
@@ -236,13 +242,59 @@ public class BitmapLruCacheMemoryReuse {
                     检查该 Bitmap 对象是否可以达到复用要求 ,
                     如果达到复用要求 , 就取出这个 Bitmap 对象 , 并将其从队列中移除
                  */
-                /*if (checkInBitmap(bitmap,w,h,inSampleSize)){
-                    inBitmap = bitmap;
-                    //移出复用池
-                    iterator.remove();
-                    break;
-                }*/
-            }else{
+
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2){
+                    /*
+                        Android 4.4（API 级别 19）以下的版本 : 在 Android 4.4（API 级别 19） 之前的代码中 ,
+                        复用的前提是必须同时满足以下 3 个条件 :
+                            1. 被解码的图像必须是 JPEG 或 PNG 格式
+                            2. 被复用的图像宽高必须等于 解码后的图像宽高
+                            3. 解码图像的 BitmapFactory.Options.inSampleSize 设置为 1 , 也就是不能缩放
+                        才能复用成功 , 另外被复用的图像的像素格式 Config ( 如 RGB_565 ) 会覆盖设置的
+                        BitmapFactory.Options.inPreferredConfig 参数 ;
+                     */
+                    if(bitmap.getWidth() == width &&
+                            bitmap.getHeight() == height && //被复用的图像宽高必须等于 解码后的图像宽高
+                            inSampleSize == 1){// 图像的 BitmapFactory.Options.inSampleSize 设置为 1
+                        //符合要求
+                        inBitmap = bitmap;
+                        iterator.remove();
+                    }
+                }else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+                    /*
+                        在 Android 4.4（API 级别 19）及以上的版本中 ,
+                        只要被解码后的 Bitmap 对象的字节大小 , 小于等于 inBitmap 的字节大小 , 就可以复用成功 ;
+                        解码后的乳香可以是缩小后的 , 即 BitmapFactory.Options.inSampleSize 可以大于1 ;
+                     */
+
+                    // 首先要计算图像的内存占用 , 先要计算出图像的宽高 , 如果图像需要缩放 , 计算缩放后的宽高
+                    if(inSampleSize > 1){
+                        width = width / inSampleSize ;
+                        height = height / inSampleSize;
+                    }
+
+                    // 计算内存占用 , 默认 ARGB_8888 格式
+                    int byteInMemory = width * height * 4;;
+                    if(bitmap.getConfig() == Bitmap.Config.ARGB_8888){
+                        // 此时每个像素占 4 字节
+                        byteInMemory = width * height * 4;
+
+                    }else if(bitmap.getConfig() == Bitmap.Config.RGB_565){
+                        // 此时每个像素占 2 字节
+                        byteInMemory = width * height * 2;
+                    }
+
+                    // 如果解码后的图片内存小于等于被复用的内存大小 , 可以复用
+                    if(byteInMemory <= bitmap.getAllocationByteCount()){
+                        //符合要求
+                        inBitmap = bitmap;
+                        iterator.remove();
+                    }
+
+                }
+
+            }else if( bitmap == null ){
+                // 如果 bitmap 为空 , 直接从复用 Bitmap 集合中移除
                 iterator.remove();
             }
         }
