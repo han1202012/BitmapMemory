@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void memoryCache(){
         // 初始化 LruCache 内存缓存
-        BitmapMemoryCache.getInstance().initCache(this);
+        BitmapMemoryCache.getInstance().initLruCache(this);
     }
 
 
