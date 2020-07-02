@@ -381,7 +381,7 @@ public class BitmapDiskLruCacheMemoryReuse {
      */
 
     /**
-     * 将键值对放入 磁盘缓存 中
+     * 将 Bitmap 放入 磁盘缓存 中
      * @param key
      * @param bitmap
      */
@@ -422,7 +422,7 @@ public class BitmapDiskLruCacheMemoryReuse {
     }
 
     /**
-     * 将键值对放入 磁盘缓存 中
+     * 从 磁盘缓存 中取出 Bitmap 对象
      * @param key       键值
      * @param inBitmap 复用 Bitmap 内存
      * @return
