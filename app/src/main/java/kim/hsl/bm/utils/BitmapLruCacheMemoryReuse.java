@@ -16,9 +16,11 @@ import java.util.Set;
 
 /**
  * Bitmap 内存缓存
- * 将图片缓存到内存中
+ * 在将图片缓存到 LruCache 内存中基础上 ,
+ * 将从 LruCache 中移除的最近没有使用的 Bitmap 对象的内存复用
+ * 这样能最大限度减少内存抖动
  */
-public class BitmapMemoryCache {
+public class BitmapLruCacheMemoryReuse {
     private static final String TAG = "BitmapMemoryCache";
 
     /**
@@ -76,11 +78,11 @@ public class BitmapMemoryCache {
     /**
      * 单例实现
      */
-    private static BitmapMemoryCache INSTANCE;
-    private BitmapMemoryCache(){}
-    public static BitmapMemoryCache getInstance(){
+    private static BitmapLruCacheMemoryReuse INSTANCE;
+    private BitmapLruCacheMemoryReuse(){}
+    public static BitmapLruCacheMemoryReuse getInstance(){
         if(INSTANCE == null){
-            INSTANCE = new BitmapMemoryCache();
+            INSTANCE = new BitmapLruCacheMemoryReuse();
         }
         return INSTANCE;
     }
@@ -227,9 +229,13 @@ public class BitmapMemoryCache {
         Iterator<WeakReference<Bitmap>> iterator = bitmapReusePool.iterator();
         //迭代查找符合复用条件的Bitmap
         while (iterator.hasNext()){
+            // 循环遍历 Bitmap 对象
             Bitmap bitmap = iterator.next().get();
-            if (null != bitmap){
-                //可以被复用
+            if (bitmap != null){
+                /*
+                    检查该 Bitmap 对象是否可以达到复用要求 ,
+                    如果达到复用要求 , 就取出这个 Bitmap 对象 , 并将其从队列中移除
+                 */
                 /*if (checkInBitmap(bitmap,w,h,inSampleSize)){
                     inBitmap = bitmap;
                     //移出复用池

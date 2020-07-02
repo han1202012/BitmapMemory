@@ -8,7 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
-import kim.hsl.bm.utils.BitmapMemoryCache;
+import kim.hsl.bm.utils.BitmapLruCacheMemoryReuse;
 import kim.hsl.bm.utils.BitmapSizeReduce;
 
 public class MainActivity extends AppCompatActivity {
@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void memoryCache(){
         // 初始化 LruCache 内存缓存
-        BitmapMemoryCache.getInstance().init(this);
+        BitmapLruCacheMemoryReuse.getInstance().init(this);
     }
 
 
