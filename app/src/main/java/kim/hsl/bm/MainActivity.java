@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * 图像缓存
+     * 图像磁盘内存缓存
      */
     private void diskMemoryCache(){
         // 初始化 LruCache 内存缓存 , 与引用队列 , 一般在 onCreate 方法中初始化
