@@ -293,7 +293,6 @@ public class BitmapLruCacheMemoryReuse {
                         inBitmap = bitmap;
                         iterator.remove();
                     }
-
                 }
 
             }else if( bitmap == null ){
